@@ -1,22 +1,20 @@
 from fastapi import APIRouter,HTTPException
-from Controller.projectManagementController import  createProject,assignEmployeeToProj,getAllEmployee,getAllProject
-from Controller.taskManagementController import createTask,updateTask,getProjectTask
-from Models.models import ProjectModel,TaskModel
-from Views.views import employee_viewer, project_viewer, projectTask_viewer
-from fastapi.responses import PlainTextResponse
+from Controller.projectManagementController import  createProject,updateProject
+from Controller.taskManagementController import createTask,updateTask
+from Models.models import ProjectCreateModel,ProjectUpdateModel,TaskModel
 
 router = APIRouter()
 
 
 @router.post("/createProject")
-async def add_project(project: ProjectModel):
+async def add_project(project: ProjectCreateModel):
     projectResult = await createProject(project)
-    return f"The project with ProjectID {projectResult} has been created."
+    return projectResult
 
-@router.put("/assignEmployeeProject")
-async def assign_employee_to_proj(employeeID:str,projectID:str):
-    employeeResult = await assignEmployeeToProj(employeeID,projectID)
-    return f"{employeeResult}"
+@router.put("/updateProject")
+async def update_Project(id:str,project: ProjectUpdateModel):
+    projectResult = await updateProject(id,project)
+    return projectResult
 
 @router.post("/createTask")
 async def add_Task(task:TaskModel):

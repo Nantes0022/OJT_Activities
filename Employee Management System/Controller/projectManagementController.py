@@ -1,67 +1,50 @@
 from connection.database import db
-from Models.models import ProjectModel
+from Models.models import ProjectCreateModel,ProjectUpdateModel
 from Views.views import employee_viewer
 
 projectCollection = db["projectList"]
 employeeCollection = db["employeeList"]
 taskCollection = db["taskList"]
 
-async def createProject(project: ProjectModel):
+async def createProject(project: ProjectCreateModel):
     proj = project.model_dump()
-    newProject = await (projectCollection.insert_one(proj))
-    if (newProject.acknowledged):
-        return str(proj["projectID"])
+    projectCheck = await projectCollection.find_one({"projectID":proj["projectID"]})
+    if projectCheck:
+        return "Project ID Already Exist"
+    elif proj["projectID"] == "":
+        return "Please fill up Project ID"
     else:
-        return "null"
+        newProject = await (projectCollection.insert_one(proj))
+        return f"The project with ProjectID {proj["projectID"]} has been created."
+    
+async def updateProject(id:str,project: ProjectUpdateModel):
+    projectDict = project.model_dump(exclude_unset=True)
+    projectCheck = await projectCollection.find_one({"projectID":id})
+    if projectCheck is None:
+        return "Employee ID not Found"
+    else:
+        await projectCollection.update_one(
+            {"projectID": id},
+            {"$set": projectDict}
+        )
+        return f"The employee with EmployeeID {id} has been updated."
     
 async def getAllEmployee():
-    return await employeeCollection.find({},{"_id":0,"employeeID":1,"firstName": 1,"lastName":1}).to_list()
-    
-async def assignEmployeeToProj(employeeID:str,projectID:str): 
-
-    employees = await employeeCollection.find_one({"employeeID":employeeID})
-    projects = await projectCollection.find_one({"projectID":projectID}, {"_id": 0, "projectID": 1,"assignedEmployee": 1})
-    if employees is None and projects is None:
-        return "No Employee ID and Project ID found"
-    elif employees is None:
-        return "No Employee ID found"
-    elif projects is None:
-        return "No Project ID found"
-    else:
-        if(projects["assignedEmployee"]=="None"):
-            updateProject = await projectCollection.update_one(
-                {"projectID": projectID},
-                {"$set": {"assignedEmployee":[employeeID]}}
-            )
-            if (updateProject.acknowledged):
-                return f"The project with ProjectID {str(projectID)} has been updated"
-        else:
-            updateProject = await projectCollection.update_one(
-                {"projectID": projectID},
-                {"$addToSet": {"assignedEmployee":employeeID}}
-            )
-            if updateProject.modified_count > 0:
-                return f"The project with ProjectID {projectID} has been assigned to EmployeeID {employeeID}."
-            else:
-                return f"No changes were made, EmployeeID {employeeID} has been already assigned to ProjectID {projectID}."
-            
+    return await employeeCollection.find().to_list()
+      
 async def getAllProject():
-    employees = await employeeCollection.find(
-        {}, {"_id": 0, "employeeID": 1, "firstName": 1, "lastName": 1}
-    ).to_list()
+    employees = await employeeCollection.find().to_list()
 
-    projects = await projectCollection.find(
-        {}, {
-            "_id": 0, 
-            "projectID": 1,
-            "projectName": 1,
-            "projectDescription": 1,
-            "projectTargetDate": 1,
-            "projectStartDate": 1,
-            "assignedEmployee": 1,
-            "progress": 1
-        }
-    ).to_list()
+    projects = await projectCollection.find().to_list()
+
+    tasks = await taskCollection.find().to_list()
+
+    return projects,employees,tasks
+
+async def getProjectHistory():
+    employees = await employeeCollection.find().to_list()
+
+    projects = await projectCollection.find().to_list()
 
     tasks = await taskCollection.find().to_list()
 

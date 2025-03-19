@@ -2,7 +2,17 @@ from pydantic import BaseModel,field_validator
 from typing import Optional,List
 from datetime import datetime
 
-class EmployeeModel(BaseModel):
+class EmployeeCreateModel(BaseModel):
+    employeeID: str
+    firstName: str
+    lastName: str
+    email: str
+    position: str
+    department: str
+    dateJoined: datetime
+    isActive:bool
+
+class EmployeeUpdateModel(BaseModel):
     employeeID: Optional[str] = None
     firstName: Optional[str] = None
     lastName: Optional[str] = None
@@ -12,8 +22,14 @@ class EmployeeModel(BaseModel):
     dateJoined: Optional[str] = None
     isActive:bool
 
-class ProjectModel(BaseModel):
-    projectID:Optional[str] = None
+class ProjectCreateModel(BaseModel):
+    projectID:str
+    projectName:str
+    projectDescription:str
+    projectTargetDate:datetime
+    projectStartDate:datetime
+
+class ProjectUpdateModel(BaseModel):
     projectName:Optional[str] = None
     projectDescription:Optional[str] = None
     projectTargetDate:Optional[datetime] = None

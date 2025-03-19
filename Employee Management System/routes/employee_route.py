@@ -1,20 +1,20 @@
 from fastapi import APIRouter,HTTPException
 from Controller.controllers import createEmployee,updateEmployee,softDeleteEmployee
-from Models.models import EmployeeModel
+from Models.models import EmployeeCreateModel,EmployeeUpdateModel
 
 router = APIRouter()
 
 @router.post("/createEmployee")
-async def add_employee(emp: EmployeeModel):
-    employee_id = await createEmployee(emp)
-    return f"The employee with EmployeeID {employee_id} has been created."
+async def add_employee(emp: EmployeeCreateModel):
+    employeeResult = await createEmployee(emp)
+    return employeeResult
 
 @router.put("/updateEmployee")
-async def update_employee(id:int,emp: EmployeeModel):
-    employee_id = await updateEmployee(id, emp)
-    return f"The employee with EmployeeID {employee_id} has been updated."
+async def update_employee(id:str,emp: EmployeeUpdateModel):
+    employeeResult = await updateEmployee(id, emp)
+    return employeeResult
 
 @router.patch("/deleteEmployee")
-async def patch_employee(id:int,emp: EmployeeModel):
-    employee_id = await softDeleteEmployee(id, emp)
-    return str(emp.employeeID)
+async def patch_employee(id:str,isActive:bool):
+    employeeResult = await softDeleteEmployee(id, isActive)
+    return employeeResult
