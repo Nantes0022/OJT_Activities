@@ -1,97 +1,103 @@
 from datetime import datetime
 from itertools import zip_longest
+from ErrorHandling.errorHandling import serverErrorHandling
+from traceback import format_exc
 
 assigned_employees = []
 
 
 def employee_viewer(employees):
-    output= f"Available Employees\n\n"
-    for employee in employees:
-        if employee["isActive"]==True: 
-            output+= f"Employee ID: {employee["employeeID"]}\n"
-            output+= f"Name: {employee['firstName']} {employee['lastName']}\n\n"
-    return output.strip()
+    try:
+        data = {
+        "available employee": [
+            {"employeeID": emp["employeeID"], "firstName": emp["firstName"], "lastName": emp["lastName"]}
+            for emp in employees if emp["isActive"]
+            ]
+        }
+                
+        
+        return data
+    except Exception as e:
+        raise serverErrorHandling(e)
 
 
 
 def projectTask_viewer(projects, tasks, employee):
-    output= ""
-    for project in projects:
-        output+= f"{project["projectName"]}\n"
-        for task in tasks:
-            
-            if project["projectID"] == task["projectID"]:
-                output += f"Task\n"
-                output += f"ID: {task["taskID"]}\n"
-                output += f"Name: {task["taskName"]}\n"
-                output += f"Description: {task["taskDescription"]}\n"
-                output += f"Status: {task["taskStatus"]}\n"
-                if task["assignEmployee"] == "None":
-                    output += f"Assigned To: None\n\n"
-                else:
-                    output += f"Assigned To: "
-                    for e in employee:
-                        if e["employeeID"] in task["assignEmployee"]:
-                           output += f"{e['firstName']} {e['lastName']}, " 
-                    output = output.rstrip(", ")   
-                    output += "\n\n"
-        output+= f"==================================================================\n"
-    return output.strip()
+    try:
+        data = {
+        "activeTasks": {}
+        }
+        for task,project in zip(tasks,projects):
+            data["activeTask"][task["taskID"]] = {
+                "taskName": task["taskName"], 
+                "taskDescription": task["taskDescription"],
+                "projectID": project["projectID"],
+                "taskStatus":task["taskStatus"],
+                "assignedEmployee": [
+                        {"firstName": emp["firstName"], "lastName": emp["lastName"]}
+                        for emp in employee if emp["employeeID"] in task.get("assignEmployee", [])  # Avoids KeyError
+                    ]
+            }
+        
+        return data
+    except Exception as e:
+        raise serverErrorHandling(e)
+        
+    
 
 
 def project_viewer(projects,employees,tasks):
-    output="Ongoing Projects\n\n"
-        
-    for project in projects:
-        progress = progressProject(tasks,project["projectID"])
-        if progress != "Completed":
-            output += displayProject(project,employees,tasks)
-    return output
+    try:
+        data = {
+            "ongoingProject": {}
+        }
+
+        return projectData(projects,tasks,employees,data,"ongoingProject","Completed")
+    except Exception as e:
+        raise serverErrorHandling(e)
 
 def projectHistory_viewer(projects,employees,tasks):
-    output="Project History\n"
-        
-    for project in projects:
-        progress = progressProject(tasks,project["projectID"])
-        if progress != "Not yet started":
-            output += displayProject(project,employees,tasks)
-    return output
+    try:
+        data = {
+            "projectHistory": {}
+        }
 
-def displayProject(projects,employees,tasks):
-    output = ""
-    output += f"{projects.get('projectName', 'Unnamed Project')}\n"
-    output += f"Description: {projects.get('projectDescription', 'No Description')}\n"
-    output += f"Target Date: {projects['projectTargetDate'].strftime('%B %d, %Y')}\n"
-    output += f"Start Date: {projects['projectStartDate'].strftime('%B %d, %Y')}\n"
-    output += f"Assigned Employee:"
-    output += f" {assignedEmployee(employees,tasks,projects["projectID"])}\n"
-    output += f"Progress: {progressProject(tasks,projects["projectID"])}\n\n"
-    output += f"\n"
-    return output
+        return projectData(projects,tasks,employees,data,"projectHistory","Not yet started")
+    except Exception as e:
+        raise serverErrorHandling(e)
 
-def assignedEmployee(employee,task,projectID):
-    output=""
-    employeeSet = set()
-    for t in task:
-        if t["projectID"] == projectID and t["assignEmployee"] != "None":
-            for e in employee:
-                if e["employeeID"] in t["assignEmployee"] and e["employeeID"] not in employeeSet:
-                    employeeSet.add(e["employeeID"])
-                    output += f"({e['firstName']} {e['lastName']}),"
-                
-    output = output.rstrip(", ")   
-    if output == "":
-        output = "None"
-    return output
+def projectData(projects,tasks,employees,data,goto,condition):
+    try:
+        datas = data
+        for project in projects:
+            statusData=progressProject(project["projectID"],tasks)
+            if statusData != condition:
+                datas[goto][project["projectID"]] = {
+                    "projectName": project["projectName"], 
+                    "projectDescription": project["projectDescription"],
+                    "projectTargetDate": datetime.fromisoformat(str(project["projectTargetDate"])).strftime("%Y-%m-%d"),
+                    "projectStartDate":datetime.fromisoformat(str(project["projectStartDate"])).strftime("%Y-%m-%d"),
+                    "progress": statusData,
+                    "assignedEmployee": [
+                            {"firstName": first, "lastName": last}
+                                for first, last in {
+                                    (emp["firstName"], emp["lastName"])
+                                    for task in tasks if task["projectID"] == project["projectID"]
+                                    for emp in employees if emp["employeeID"] in task.get("assignEmployee", [])
+                            }]
+                }
+        return datas
+    except Exception as e:
+        raise serverErrorHandling(e)
 
-def progressProject(tasks,projectID):
+def progressProject(projID,tasks):
     taskCount = 0
     taskDone = 0
     for task in tasks:
-        if task["projectID"] == projectID:
-            taskCount += 1
+        if projID == task["projectID"]:
+           taskCount += 1
 
-        if task["projectID"] == projectID and task["taskStatus"] == "Done":
+        if projID == task["projectID"] and task["taskStatus"] == "Done":
             taskDone +=1
     progress = round((taskDone/taskCount)*100) if taskCount and taskDone else 0
     if progress == 0:

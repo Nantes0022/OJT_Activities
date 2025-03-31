@@ -1,35 +1,20 @@
 from pydantic import BaseModel,field_validator
-from typing import Optional,List
+from typing import Optional,List,Union
 from datetime import datetime
 
-class EmployeeCreateModel(BaseModel):
-    employeeID: str
-    firstName: str
-    lastName: str
-    email: str
-    position: str
-    department: str
-    dateJoined: datetime
-    isActive:bool
-
-class EmployeeUpdateModel(BaseModel):
+class EmployeeModel(BaseModel):
     employeeID: Optional[str] = None
     firstName: Optional[str] = None
     lastName: Optional[str] = None
     email: Optional[str] = None
     position: Optional[str] = None
     department: Optional[str] = None
-    dateJoined: Optional[str] = None
-    isActive:bool
+    dateJoined: Optional[datetime] = None
+    isActive:Optional[bool] = None
 
-class ProjectCreateModel(BaseModel):
-    projectID:str
-    projectName:str
-    projectDescription:str
-    projectTargetDate:datetime
-    projectStartDate:datetime
 
-class ProjectUpdateModel(BaseModel):
+class ProjectModel(BaseModel):
+    projectID:Optional[str] = None
     projectName:Optional[str] = None
     projectDescription:Optional[str] = None
     projectTargetDate:Optional[datetime] = None
@@ -42,4 +27,6 @@ class TaskModel(BaseModel):
     taskName:Optional[str] = None
     taskDescription:Optional[str] = None
     taskStatus:Optional[str] = None
-    assignEmployee:Optional[List] = None
+    assignEmployee:Optional[Union[List[str], str]] = None
+
+

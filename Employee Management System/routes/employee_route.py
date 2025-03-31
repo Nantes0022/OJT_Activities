@@ -1,16 +1,16 @@
-from fastapi import APIRouter,HTTPException
+from fastapi import APIRouter
 from Controller.controllers import createEmployee,updateEmployee,softDeleteEmployee
-from Models.models import EmployeeCreateModel,EmployeeUpdateModel
+from Models.models import EmployeeModel
 
 router = APIRouter()
 
 @router.post("/createEmployee")
-async def add_employee(emp: EmployeeCreateModel):
+async def add_employee(emp: EmployeeModel):
     employeeResult = await createEmployee(emp)
     return employeeResult
 
 @router.put("/updateEmployee")
-async def update_employee(id:str,emp: EmployeeUpdateModel):
+async def update_employee(id:str,emp: EmployeeModel):
     employeeResult = await updateEmployee(id, emp)
     return employeeResult
 
