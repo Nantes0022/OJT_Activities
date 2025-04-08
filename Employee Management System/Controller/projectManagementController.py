@@ -11,8 +11,8 @@ taskCollection = db["taskList"]
 async def createProject(project: ProjectModel):
     try:
         proj = project.model_dump()
-        projectCheck = await projectCollection.find_one({"projectID":proj["projectIDs"]})
-        req_Fields = ['projectID','projectName','projectStartDate']
+        projectCheck = await projectCollection.find_one({"projectID":proj["projectID"]})
+        req_Fields = ['projectID','projectName','projectTargetDate']
         miss_Fields = [field for field in req_Fields if not proj.get(field)]
         print(miss_Fields)
         if miss_Fields:
@@ -26,8 +26,11 @@ async def createProject(project: ProjectModel):
             return successHTTP("Created",f"Project Information Inserted",project.model_dump(mode="json",exclude_unset=True))
         else:
             raise clientErrorHandling(200,"OK","An Error has been occured on updating information",project.model_dump(mode="json",exclude_unset=True))
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise serverErrorHandling(e)
+
     
     
 async def updateProject(id:str,project: ProjectModel):
@@ -51,12 +54,16 @@ async def updateProject(id:str,project: ProjectModel):
             return successHTTP("OK",f"Project Information Updated. ID: {id}",project.model_dump(mode="json",exclude_unset=True))
         else:
             raise clientErrorHandling(500,"Internal Server Error","An Error has been occured on updating information",project.model_dump(mode="json"))
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise serverErrorHandling(e)
 async def getAllEmployee():
     try:
         employees = await employeeCollection.find().to_list()
         return employees
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise serverErrorHandling(e)
       
@@ -66,6 +73,8 @@ async def getAllProject():
         projects = await projectCollection.find().to_list()
         tasks = await taskCollection.find().to_list()
         return projects,employees,tasks
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise serverErrorHandling(e)
 
@@ -75,5 +84,7 @@ async def getProjectHistory():
         projects = await projectCollection.find().to_list()
         tasks = await taskCollection.find().to_list()
         return projects,employees,tasks
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise serverErrorHandling(e)

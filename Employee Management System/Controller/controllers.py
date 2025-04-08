@@ -26,6 +26,8 @@ async def createEmployee(emp: EmployeeModel):
             return successHTTP( "success", f"Employee Information Inserted",emp.model_dump(mode="json"))
         else:
             clientErrorHandling(200,"OK","An Error has been occured on updating information",emp.model_dump(mode="json"))
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise serverErrorHandling(e)
 
@@ -52,13 +54,14 @@ async def updateEmployee(id:str,emp: EmployeeModel):
             return successHTTP("OK",f"Employee Information Updated with the ID: {id}",emp.model_dump(mode="json"))
         else:
             clientErrorHandling(200,"OK","An Error has been occured on updating information",emp.model_dump(mode="json"))
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise serverErrorHandling(e)
     
 async def softDeleteEmployee(id:str,isActive:bool):
     try:
         employeeCheck = await employeeCollection.find_one({"employeeID":id},{})
-        print(employeeCheck)
         if employeeCheck is None:
             raise clientErrorHandling(404,"OK",f"Employee ID not Found: {id}",{"isActive":isActive})
         elif isActive == employeeCheck["isActive"]:
@@ -70,8 +73,10 @@ async def softDeleteEmployee(id:str,isActive:bool):
             )
             if softDeleteEmployee.acknowledged:
                 print(softDeleteEmployee.acknowledged)
-                return successHTTP("OK",f"Employee Information Updated(Soft Deleted) ID: {id}")
+                return successHTTP("OK",f"Employee Information Updated(Soft Deleted) ID: {id}",{"isActive":isActive})
             else:
-                clientErrorHandling(200,"OK","An Error has been occured on updating information")
+                clientErrorHandling(200,"OK","An Error has been occured on updating information",{"isActive":isActive})
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise serverErrorHandling(e)

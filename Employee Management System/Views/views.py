@@ -28,14 +28,14 @@ def projectTask_viewer(projects, tasks, employee):
         "activeTasks": {}
         }
         for task,project in zip(tasks,projects):
-            data["activeTask"][task["taskID"]] = {
+            data["activeTasks"][task["taskID"]] = {
                 "taskName": task["taskName"], 
                 "taskDescription": task["taskDescription"],
                 "projectID": project["projectID"],
                 "taskStatus":task["taskStatus"],
                 "assignedEmployee": [
                         {"firstName": emp["firstName"], "lastName": emp["lastName"]}
-                        for emp in employee if emp["employeeID"] in task.get("assignEmployee", [])  # Avoids KeyError
+                        for emp in employee if emp["employeeID"] in task.get("assignEmployee", [])
                     ]
             }
         
@@ -71,12 +71,19 @@ def projectData(projects,tasks,employees,data,goto,condition):
         datas = data
         for project in projects:
             statusData=progressProject(project["projectID"],tasks)
+            startDateString=""
+            TargetDateString=""
+            if project["projectStartDate"] != None:
+                startDateString=datetime.fromisoformat(str(project["projectStartDate"])).strftime("%Y-%m-%d")
+            
+            if project["projectTargetDate"] != None:
+                TargetDateString=datetime.fromisoformat(str(project["projectTargetDate"])).strftime("%Y-%m-%d")
             if statusData != condition:
                 datas[goto][project["projectID"]] = {
                     "projectName": project["projectName"], 
                     "projectDescription": project["projectDescription"],
-                    "projectTargetDate": datetime.fromisoformat(str(project["projectTargetDate"])).strftime("%Y-%m-%d"),
-                    "projectStartDate":datetime.fromisoformat(str(project["projectStartDate"])).strftime("%Y-%m-%d"),
+                    "projectTargetDate": startDateString,
+                    "projectStartDate":TargetDateString,
                     "progress": statusData,
                     "assignedEmployee": [
                             {"firstName": first, "lastName": last}
