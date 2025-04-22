@@ -6,20 +6,16 @@ from traceback import format_exc
 assigned_employees = []
 
 
-def employee_viewer(employees):
+def view_employee(employees):
     try:
         data = {
         "available employee": [
-            {"employeeID": emp["employeeID"], "firstName": emp["firstName"], "lastName": emp["lastName"]}
-            for emp in employees if emp["isActive"]
+            employees
             ]
-        }
-                
-        
+        }    
         return data
     except Exception as e:
         raise serverErrorHandling(e)
-
 
 
 def projectTask_viewer(projects, tasks, employee):
@@ -28,10 +24,10 @@ def projectTask_viewer(projects, tasks, employee):
         "activeTasks": {}
         }
         for task,project in zip(tasks,projects):
-            data["activeTasks"][task["taskID"]] = {
-                "taskName": task["taskName"], 
-                "taskDescription": task["taskDescription"],
-                "projectID": project["projectID"],
+            data["activeTasks"][task["taskId"]] = {
+                "name": task["name"], 
+                "description": task["taskDescription"],
+                "projectId": project["projectId"],
                 "taskStatus":task["taskStatus"],
                 "assignedEmployee": [
                         {"firstName": emp["firstName"], "lastName": emp["lastName"]}
@@ -70,27 +66,27 @@ def projectData(projects,tasks,employees,data,goto,condition):
     try:
         datas = data
         for project in projects:
-            statusData=progressProject(project["projectID"],tasks)
+            statusData=progressProject(project["projectId"],tasks)
             startDateString=""
             TargetDateString=""
-            if project["projectStartDate"] != None:
-                startDateString=datetime.fromisoformat(str(project["projectStartDate"])).strftime("%Y-%m-%d")
+            if project["startDate"] != None:
+                startDateString=datetime.fromisoformat(str(project["startDate"])).strftime("%Y-%m-%d")
             
-            if project["projectTargetDate"] != None:
-                TargetDateString=datetime.fromisoformat(str(project["projectTargetDate"])).strftime("%Y-%m-%d")
+            if project["targetDate"] != None:
+                TargetDateString=datetime.fromisoformat(str(project["targetDate"])).strftime("%Y-%m-%d")
             if statusData != condition:
-                datas[goto][project["projectID"]] = {
-                    "projectName": project["projectName"], 
-                    "projectDescription": project["projectDescription"],
-                    "projectTargetDate": startDateString,
-                    "projectStartDate":TargetDateString,
+                datas[goto][project["projectId"]] = {
+                    "name": project["name"], 
+                    "description": project["description"],
+                    "targetDate": startDateString,
+                    "startDate":TargetDateString,
                     "progress": statusData,
                     "assignedEmployee": [
                             {"firstName": first, "lastName": last}
                                 for first, last in {
                                     (emp["firstName"], emp["lastName"])
-                                    for task in tasks if task["projectID"] == project["projectID"]
-                                    for emp in employees if emp["employeeID"] in task.get("assignEmployee", [])
+                                    for task in tasks if task["projectId"] == project["projectId"]
+                                    for emp in employees if emp["employeeId"] in task.get("assignEmployee", [])
                             }]
                 }
         return datas
@@ -101,10 +97,10 @@ def progressProject(projID,tasks):
     taskCount = 0
     taskDone = 0
     for task in tasks:
-        if projID == task["projectID"]:
+        if projID == task["projectId"]:
            taskCount += 1
 
-        if projID == task["projectID"] and task["taskStatus"] == "Done":
+        if projID == task["projectId"] and task["status"] == "Done":
             taskDone +=1
     progress = round((taskDone/taskCount)*100) if taskCount and taskDone else 0
     if progress == 0:

@@ -1,5 +1,5 @@
 from connection.database import db
-from Models.models import ProjectModel
+from Models.models import Project
 from ErrorHandling.errorHandling import clientErrorHandling,serverErrorHandling,successHTTP
 from traceback import format_exc
 from fastapi import HTTPException
@@ -8,18 +8,18 @@ projectCollection = db["projectList"]
 employeeCollection = db["employeeList"]
 taskCollection = db["taskList"]
 
-async def createProject(project: ProjectModel):
+async def createProject(project: Project):
     try:
         proj = project.model_dump()
-        projectCheck = await projectCollection.find_one({"projectID":proj["projectID"]})
-        req_Fields = ['projectID','projectName','projectTargetDate']
+        projectCheck = await projectCollection.find_one({"projectId":proj["projectId"]})
+        req_Fields = ['projectId','name','targetDate']
         miss_Fields = [field for field in req_Fields if not proj.get(field)]
         print(miss_Fields)
         if miss_Fields:
             raise clientErrorHandling(422, "error", f"Missing required fields: {', '.join(miss_Fields)}",project.model_dump(mode="json",exclude_unset=True)) 
         elif projectCheck:
             print("PROJECT ID ALREADY EXIST")  
-            raise clientErrorHandling(409,"Conflict",f"Project ID {proj["projectID"]} Already Exist",project.model_dump(mode="json",exclude_unset=True))
+            raise clientErrorHandling(409,"Conflict",f"Project ID {proj["projectId"]} Already Exist",project.model_dump(mode="json",exclude_unset=True))
         
         newProject = await (projectCollection.insert_one(proj))
         if newProject.acknowledged:
@@ -33,40 +33,30 @@ async def createProject(project: ProjectModel):
 
     
     
-async def updateProject(id:str,project: ProjectModel):
+async def updateProject(projectId:str,project: Project):
     try:
         projectDict = project.model_dump(exclude_unset=True)
-        projectCheck = await projectCollection.find_one({"projectID":id},{})
+        projectCheck = await projectCollection.find_one({"projectId":projectId},{})
         
         if projectCheck is None:
             raise clientErrorHandling(404,"Not Found","Project ID not Found",project.model_dump(mode="json",exclude_unset=True))
         elif not projectDict:
             print("EMPTY RESPONSE BODY")  
             raise clientErrorHandling(200,"OK","Response Body is empty",project.model_dump(mode="json",exclude_unset=True))
-        elif all(projectDict.get(key) == projectCheck.get(key) for key in projectDict):
-            print("RECORD ARE THE SAME")  
-            raise clientErrorHandling(200,"Not Modified","The entered record matches the existing data in the database. No change has been made.",project.model_dump(mode="json",exclude_unset=True))
+            
         update_Result = await projectCollection.update_one(
-                {"projectID": id},
+                {"projectId": projectId},
                 {"$set": projectDict}
             )
-        if update_Result.acknowledged:
-            return successHTTP("OK",f"Project Information Updated. ID: {id}",project.model_dump(mode="json",exclude_unset=True))
+        if update_Result.modified_count == 0:
+            raise clientErrorHandling(200,"Not Modified","The entered record matches the existing data in the database. No change has been made.",project.model_dump(mode="json",exclude_unset=True))
         else:
-            raise clientErrorHandling(500,"Internal Server Error","An Error has been occured on updating information",project.model_dump(mode="json"))
+            return successHTTP("OK",f"Project Information Updated. ID: {projectId}",project.model_dump(mode="json",exclude_unset=True))
     except HTTPException as e:
         raise e
     except Exception as e:
         raise serverErrorHandling(e)
-async def getAllEmployee():
-    try:
-        employees = await employeeCollection.find().to_list()
-        return employees
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise serverErrorHandling(e)
-      
+
 async def getAllProject():
     try:
         employees = await employeeCollection.find().to_list()

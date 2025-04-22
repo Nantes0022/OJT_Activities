@@ -1,4 +1,4 @@
-from fastapi import HTTPException
+from fastapi import HTTPException,status
 from fastapi.responses import JSONResponse
 from traceback import format_exc,extract_tb
 from sys import exc_info
@@ -37,3 +37,21 @@ def serverErrorHandling(e):
                             "code": text,
                             "msg": str(e)
                         })
+
+def token_exception():
+    token_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid or Expired Token",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    return token_exception
+
+def credentials_exception():
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Unauthorized Login",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    return credentials_exception

@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 empURI = os.getenv("MONGO_URI")
-dbName="EmployeeManagement"
+dbName="projectManagement"
 
 client = AsyncIOMotorClient(empURI)
 db = client[dbName]
