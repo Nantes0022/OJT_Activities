@@ -80,7 +80,7 @@ async def create_token(data:dict, expires_delta: timedelta = None, role:str = No
         return e
     
 async def generate_access_tokens(data: dict):
-    token,data,expire = await create_token({"sub": data["username"]}, timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),data["role"])
+    token,data,expire = await create_token({"sub": data["username"]}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),data["role"])
     return token
 
 async def generate_refresh_token(data: dict):

@@ -50,7 +50,7 @@ def token_exception():
 def credentials_exception():
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Unauthorized Login",
+        detail="Unauthorized Access",
         headers={"WWW-Authenticate": "Bearer"},
     )
 
