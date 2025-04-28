@@ -4,4 +4,3 @@ torchaudio
 accelerate
 transformers
 datasets
-trl
